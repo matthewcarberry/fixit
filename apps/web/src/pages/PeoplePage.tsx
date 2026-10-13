@@ -139,6 +139,7 @@ function AddedNotice({ added, onDismiss }: { added: CreatedUser & { password: st
 function PersonRow({ person, isMe }: { person: PublicUser; isMe: boolean }) {
   const queryClient = useQueryClient();
   const [resetting, setResetting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [password, setPassword] = useState("");
   const update = useMutation({
     mutationFn: (input: UpdateUserInput) => api.patch<PublicUser>(`/api/users/${person.id}`, input),
@@ -174,6 +175,9 @@ function PersonRow({ person, isMe }: { person: PublicUser; isMe: boolean }) {
             >
               {person.active ? "Deactivate" : "Reactivate"}
             </button>
+            <button className="btn-secondary px-3 py-2 text-red-700 dark:text-red-400" onClick={() => setDeleting(!deleting)}>
+              Delete
+            </button>
           </div>
         )}
       </div>
@@ -196,6 +200,48 @@ function PersonRow({ person, isMe }: { person: PublicUser; isMe: boolean }) {
         </form>
       )}
       {!fields.password && <ErrorNote error={update.error} />}
+      {deleting && <ConfirmDelete person={person} onCancel={() => setDeleting(false)} />}
     </li>
+  );
+}
+
+function ConfirmDelete({ person, onCancel }: { person: PublicUser; onCancel: () => void }) {
+  const queryClient = useQueryClient();
+  const [typed, setTyped] = useState("");
+  const remove = useMutation({
+    mutationFn: () => api.delete(`/api/users/${person.id}`),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: keys.users });
+      void queryClient.invalidateQueries({ queryKey: keys.tickets() });
+    },
+  });
+  const matches = typed.trim().toLowerCase() === person.name.trim().toLowerCase();
+
+  return (
+    <form
+      className="mt-3 space-y-3 rounded-xl border border-red-300 p-3.5 text-sm dark:border-red-900"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (matches) remove.mutate();
+      }}
+    >
+      <p>
+        <span className="font-semibold">Delete {person.name} for good?</span> This removes their account, every ticket
+        they reported (with its photos and messages), and anything they wrote on other tickets.{" "}
+        <span className="font-semibold">This can't be undone.</span> To keep their history, deactivate them instead.
+      </p>
+      <Field label={`Type ${person.name} to confirm`} htmlFor={`del-${person.id}`}>
+        <input id={`del-${person.id}`} className="input" autoComplete="off" value={typed} onChange={(e) => setTyped(e.target.value)} />
+      </Field>
+      <ErrorNote error={remove.error} />
+      <div className="flex flex-wrap gap-2">
+        <button className="btn-danger" disabled={!matches || remove.isPending}>
+          {remove.isPending ? "Deleting…" : `Delete ${person.name}`}
+        </button>
+        <button type="button" className="btn-secondary" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }

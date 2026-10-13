@@ -86,6 +86,8 @@ test("Matt triages, asks a question and leaves a private note", async ({ page })
   await expect(page.getByLabel("1 unread").filter({ visible: true })).toBeVisible();
   await snap(page, "05-queue");
   await page.getByRole("link", { name: /Wifi keeps dropping upstairs/ }).click();
+  // The queue also has a "Category" filter, so wait for the ticket page before using its controls.
+  await expect(page.getByRole("heading", { name: "Wifi keeps dropping upstairs" })).toBeVisible();
 
   await page.getByLabel("Category").selectOption({ label: "Network / Wifi" });
   await expect(page.getByText("changed category to Network / Wifi")).toBeVisible();
@@ -125,6 +127,7 @@ test("Sam sees the question, not the private note, and replies", async ({ page }
 test("Matt resolves it and Sam confirms the fix", async ({ page }) => {
   await signIn(page, ADMIN);
   await page.goto("/tickets/1");
+  await expect(page.getByRole("heading", { name: "Wifi keeps dropping upstairs" })).toBeVisible();
   await page.getByLabel("Status").selectOption("resolved");
   await expect(page.getByText("Closes automatically unless it's reopened.")).toBeVisible();
   await signOut(page);
@@ -133,6 +136,26 @@ test("Matt resolves it and Sam confirms the fix", async ({ page }) => {
   await page.goto("/tickets/1");
   await page.getByRole("button", { name: "Yes, it's fixed" }).click();
   await expect(page.getByText("This ticket is closed. Still a problem?")).toBeVisible();
+});
+
+test("Matt deletes a person after confirming", async ({ page }) => {
+  await signIn(page, ADMIN);
+  await page.goto("/settings/people");
+  await page.getByRole("button", { name: "Add a person" }).click();
+  await page.getByLabel("Name").fill("Temp");
+  await page.getByLabel("Email").fill("temp@example.com");
+  await page.getByLabel("Starting password").fill("temporary pass 1");
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+  await page.getByRole("button", { name: "Dismiss" }).click();
+
+  const row = page.getByRole("listitem").filter({ hasText: "temp@example.com" });
+  await row.getByRole("button", { name: "Delete" }).click();
+  const confirm = row.getByRole("button", { name: "Delete Temp" });
+  await expect(confirm).toBeDisabled();
+  await row.getByLabel("Type Temp to confirm").fill("Temp");
+  await snap(page, "09-delete-person");
+  await confirm.click();
+  await expect(page.getByText("temp@example.com")).toHaveCount(0);
 });
 
 test("wrong passwords lock the account for a while", async ({ page }) => {

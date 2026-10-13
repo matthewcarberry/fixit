@@ -16,7 +16,7 @@ export async function makeApp(overrides: Partial<Config> = {}) {
   };
 
   const call = async (
-    method: "GET" | "POST" | "PATCH",
+    method: "GET" | "POST" | "PATCH" | "DELETE",
     url: string,
     opts: { cookie?: string; body?: unknown; headers?: Record<string, string> } = {},
   ) => {

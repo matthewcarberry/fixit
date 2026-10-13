@@ -1,10 +1,12 @@
+import fs from "node:fs";
+import path from "node:path";
 import type { FastifyInstance } from "fastify";
 import type { CreatedUser, WelcomeEmailResult } from "@fixit/shared";
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, inArray, or } from "drizzle-orm";
 import { z } from "zod";
 import { categorySchema, createUserSchema, updateCategorySchema, updateUserSchema } from "@fixit/shared";
 import type { AppContext } from "../app";
-import { categories, users, type UserRow } from "../db/schema";
+import { activities, attachments, categories, comments, tickets, users, type UserRow } from "../db/schema";
 import { deleteUserSessions, hashPassword } from "../lib/auth";
 import { HttpError, badRequest, notFound } from "../lib/errors";
 import { toPublicUser } from "./auth";
@@ -80,6 +82,64 @@ export function adminRoutes(ctx: AppContext) {
       const updated = db.update(users).set(changes).where(eq(users.id, id)).returning().get();
       if (password || input.active === false) deleteUserSessions(db, id);
       return toPublicUser(updated);
+    });
+
+    /**
+     * Deletes a person for good: their account, every ticket they reported (with its photos,
+     * comments and history) and anything they wrote on other people's tickets.
+     */
+    app.delete("/users/:id", async (req) => {
+      const admin = ctx.requireAdmin(req);
+      const { id } = idParam.parse(req.params);
+      if (id === admin.id) throw badRequest("You can't delete your own account");
+      const target = db.select().from(users).where(eq(users.id, id)).get();
+      if (!target) throw notFound("That person");
+
+      const uploadRoot = path.join(config.dataDir, "uploads");
+      const { ticketIds, photos } = db.transaction((tx) => {
+        const ticketIds = tx
+          .select({ id: tickets.id })
+          .from(tickets)
+          .where(eq(tickets.requesterId, id))
+          .all()
+          .map((t) => t.id);
+        const commentIds = tx
+          .select({ id: comments.id })
+          .from(comments)
+          .where(eq(comments.authorId, id))
+          .all()
+          .map((c) => c.id);
+        // Photos they uploaded, or attached to their comments, on tickets that stay.
+        const photos = tx
+          .select({ id: attachments.id, ticketId: attachments.ticketId, storedName: attachments.storedName })
+          .from(attachments)
+          .where(
+            or(
+              eq(attachments.uploadedBy, id),
+              commentIds.length ? inArray(attachments.commentId, commentIds) : undefined,
+            ),
+          )
+          .all()
+          .filter((a) => !ticketIds.includes(a.ticketId));
+
+        if (photos.length) tx.delete(attachments).where(inArray(attachments.id, photos.map((a) => a.id))).run();
+        tx.delete(comments).where(eq(comments.authorId, id)).run();
+        // History of changes they made on other tickets stays, without their name.
+        tx.update(activities).set({ actorId: null }).where(eq(activities.actorId, id)).run();
+        // Their own tickets take their comments, photos, history and notifications with them.
+        if (ticketIds.length) tx.delete(tickets).where(inArray(tickets.id, ticketIds)).run();
+        // Sessions, notifications and push subscriptions go with the account.
+        tx.delete(users).where(eq(users.id, id)).run();
+        return { ticketIds, photos };
+      });
+
+      for (const ticketId of ticketIds) {
+        fs.rmSync(path.join(uploadRoot, String(ticketId)), { recursive: true, force: true });
+      }
+      for (const photo of photos) {
+        fs.rmSync(path.join(uploadRoot, String(photo.ticketId), photo.storedName), { force: true });
+      }
+      return { ok: true, deletedTickets: ticketIds.length };
     });
 
     app.post("/users/:id/signout", async (req) => {
