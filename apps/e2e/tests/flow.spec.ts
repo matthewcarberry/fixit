@@ -73,6 +73,8 @@ test("Matt triages, asks a question and leaves a private note", async ({ page })
   await expect(page.getByLabel("1 unread").filter({ visible: true })).toBeVisible();
   await snap(page, "05-queue");
   await page.getByRole("link", { name: /Wifi keeps dropping upstairs/ }).click();
+  // The queue also has a "Category" filter, so wait for the ticket page before using its controls.
+  await expect(page.getByRole("heading", { name: "Wifi keeps dropping upstairs" })).toBeVisible();
 
   await page.getByLabel("Category").selectOption({ label: "Network / Wifi" });
   await expect(page.getByText("changed category to Network / Wifi")).toBeVisible();
@@ -112,6 +114,7 @@ test("Sam sees the question, not the private note, and replies", async ({ page }
 test("Matt resolves it and Sam confirms the fix", async ({ page }) => {
   await signIn(page, ADMIN);
   await page.goto("/tickets/1");
+  await expect(page.getByRole("heading", { name: "Wifi keeps dropping upstairs" })).toBeVisible();
   await page.getByLabel("Status").selectOption("resolved");
   await expect(page.getByText("Closes automatically unless it's reopened.")).toBeVisible();
   await signOut(page);
