@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## 0.3.0
 
 - Passkeys: sign in with Face ID, a fingerprint or a phone's screen lock instead of a password. Add one in Settings, then use "Sign in with a passkey". Settings lists your passkeys with when each was added and last used, and you can rename or remove them. Passwords keep working.
