@@ -1,0 +1,19 @@
+{
+  "name": "fixit",
+  "private": true,
+  "version": "0.1.0",
+  "description": "A small, self-hosted help desk for the people in your home.",
+  "license": "MIT",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter @fixit/server --filter @fixit/web dev",
+    "build": "pnpm --filter @fixit/web build && pnpm --filter @fixit/server build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:e2e": "pnpm --filter @fixit/e2e test",
+    "db:generate": "pnpm --filter @fixit/server db:generate"
+  }
+}
