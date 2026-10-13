@@ -5,7 +5,7 @@ Fixit is set up so any release can be listed in Community Applications (CA). The
 - `unraid/fixit.xml`, the Docker template people install from
 - `ca_profile.xml`, the maintainer profile CA shows for this repository
 - `LICENSE` (MIT) at the repository root
-- the image `ghcr.io/matthewcarberry/fixit`, published by the Release workflow when a `v*.*.*` tag is pushed
+- the image `ghcr.io/matthewcarberry/fixit`, published by the Release workflow for each release (see Releases in the README)
 
 CI runs `python3 scripts/check-unraid.py` on every pull request. It fails if the template loses a field CA needs, points its icon or template URL at a file that doesn't exist, offers a setting the server doesn't read, or maps a port the image doesn't expose.
 

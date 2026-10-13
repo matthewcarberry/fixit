@@ -106,7 +106,9 @@ The shared package is there so the planned iOS and Android apps (React Native) c
 
 ## Releases
 
-Pushing a tag like `v0.2.0` builds the image and publishes it to `ghcr.io/matthewcarberry/fixit` with the tags `0.2.0`, `0.2` and `latest`.
+New work goes under `## Unreleased` in `CHANGELOG.md`. To release, rename that heading to the new version (for example `## 0.3.0`) in a pull request. Once it merges and CI passes on `main`, the Release workflow tags the commit `v0.3.0`, publishes the image to `ghcr.io/matthewcarberry/fixit` with the tags `0.3.0`, `0.3` and `latest`, and creates a GitHub release with that changelog section as its notes. Merges that leave `## Unreleased` on top don't release anything.
+
+Pushing a tag like `v0.3.0` by hand still works. If the changelog names a version that is already tagged, nothing is tagged or built twice.
 
 ## License
 
