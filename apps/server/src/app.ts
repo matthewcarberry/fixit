@@ -185,7 +185,7 @@ export async function buildApp(config: Config, opts: { logger?: boolean; dbFile?
       },
     });
     app.setNotFoundHandler((req, reply) => {
-      if (req.url.startsWith("/api/") || req.method !== "GET") {
+      if (req.url.startsWith("/api/") || (req.method !== "GET" && req.method !== "HEAD")) {
         return reply.status(404).send({ error: "not_found", message: "Not found" });
       }
       return reply.header("Cache-Control", "no-cache").sendFile("index.html");
