@@ -6,7 +6,7 @@ import { asc, eq, inArray, or } from "drizzle-orm";
 import { z } from "zod";
 import { categorySchema, createUserSchema, updateCategorySchema, updateUserSchema } from "@fixit/shared";
 import type { AppContext } from "../app";
-import { activities, attachments, categories, comments, tickets, users, type UserRow } from "../db/schema";
+import { activities, attachments, categories, comments, passkeys, tickets, users, type UserRow } from "../db/schema";
 import { deleteUserSessions, hashPassword } from "../lib/auth";
 import { HttpError, badRequest, notFound } from "../lib/errors";
 import { toPublicUser } from "./auth";
@@ -81,6 +81,8 @@ export function adminRoutes(ctx: AppContext) {
       if (Object.keys(changes).length === 0) return toPublicUser(target);
       const updated = db.update(users).set(changes).where(eq(users.id, id)).returning().get();
       if (password || input.active === false) deleteUserSessions(db, id);
+      // A reset usually means they lost access, maybe with a lost phone, so its passkeys go too.
+      if (password && id !== admin.id) db.delete(passkeys).where(eq(passkeys.userId, id)).run();
       return toPublicUser(updated);
     });
 

@@ -163,6 +163,28 @@ export const pushSubscriptions = sqliteTable(
   (t) => [uniqueIndex("push_endpoint_idx").on(t.endpoint)],
 );
 
+/** WebAuthn credentials ("passkeys") a person can sign in with instead of a password. */
+export const passkeys = sqliteTable(
+  "passkeys",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** Base64url credential id, as the browser reports it. */
+    credentialId: text("credential_id").notNull(),
+    /** Base64url COSE public key. */
+    publicKey: text("public_key").notNull(),
+    counter: integer("counter").notNull().default(0),
+    /** JSON array of transport hints such as "internal" or "hybrid". */
+    transports: text("transports"),
+    name: text("name").notNull(),
+    createdAt: createdAt(),
+    lastUsedAt: text("last_used_at"),
+  },
+  (t) => [uniqueIndex("passkeys_credential_idx").on(t.credentialId), index("passkeys_user_idx").on(t.userId)],
+);
+
 /** Small key/value store for generated secrets such as the push (VAPID) keys. */
 export const settings = sqliteTable("settings", {
   key: text("key").primaryKey(),
@@ -172,3 +194,4 @@ export const settings = sqliteTable("settings", {
 export type UserRow = typeof users.$inferSelect;
 export type TicketRow = typeof tickets.$inferSelect;
 export type CategoryRow = typeof categories.$inferSelect;
+export type PasskeyRow = typeof passkeys.$inferSelect;

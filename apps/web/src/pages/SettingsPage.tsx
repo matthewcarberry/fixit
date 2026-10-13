@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronRight, Share } from "lucide-react";
-import type { PublicUser } from "@fixit/shared";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ChevronRight, KeyRound, Share } from "lucide-react";
+import type { Passkey, PublicUser } from "@fixit/shared";
 import { ErrorNote, Field, PageHeader } from "../components/ui";
 import { api, RequestError } from "../lib/api";
+import { timeAgo } from "../lib/format";
+import { addPasskey, passkeysSupported } from "../lib/passkeys";
 import { disablePush, enablePush, getPushState, isIos, type PushState } from "../lib/push";
 import { getThemeChoice, setThemeChoice, type ThemeChoice } from "../lib/theme";
 import { keys, useInfo } from "../lib/queries";
@@ -48,6 +50,7 @@ export function SettingsPage({ user }: { user: PublicUser }) {
       <Notifications user={user} emailEnabled={info.data?.emailEnabled ?? false} />
       <Appearance />
       <Password />
+      <Passkeys />
       <section className="flex items-center justify-between gap-3">
         <span className="text-xs text-muted">Fixit {info.data?.version}</span>
         <button className="btn-secondary" onClick={() => signOut.mutate()} disabled={signOut.isPending}>
@@ -235,5 +238,113 @@ function Password() {
         </button>
       </form>
     </Section>
+  );
+}
+
+function Passkeys() {
+  const queryClient = useQueryClient();
+  const [supported] = useState(passkeysSupported);
+  const list = useQuery({
+    queryKey: keys.passkeys,
+    queryFn: async () => (await api.get<{ passkeys: Passkey[] }>("/api/auth/passkeys")).passkeys,
+  });
+  const add = useMutation({
+    mutationFn: addPasskey,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.passkeys }),
+  });
+  const passkeys = list.data ?? [];
+
+  return (
+    <Section title="Passkeys">
+      <p className="text-sm text-muted">
+        Sign in with Face ID, a fingerprint or your phone's screen lock instead of typing your password.
+      </p>
+      {passkeys.length > 0 && (
+        <ul className="divide-y divide-[var(--border)] rounded-xl border border-default">
+          {passkeys.map((p) => (
+            <PasskeyRow key={p.id} passkey={p} />
+          ))}
+        </ul>
+      )}
+      <ErrorNote error={add.error ?? list.error} />
+      {add.isSuccess && add.data && <p className="text-sm text-emerald-700 dark:text-emerald-400">Passkey added. You can use it next time you sign in.</p>}
+      {supported ? (
+        <button className="btn-secondary" onClick={() => add.mutate()} disabled={add.isPending}>
+          <KeyRound className="size-4" aria-hidden />
+          {add.isPending ? "Waiting for this device…" : "Add a passkey on this device"}
+        </button>
+      ) : (
+        <p className="text-sm">This browser can't make passkeys here. Open Fixit at its https address to add one.</p>
+      )}
+    </Section>
+  );
+}
+
+function PasskeyRow({ passkey }: { passkey: Passkey }) {
+  const queryClient = useQueryClient();
+  const [renaming, setRenaming] = useState(false);
+  const [name, setName] = useState(passkey.name);
+  const refresh = () => queryClient.invalidateQueries({ queryKey: keys.passkeys });
+  const rename = useMutation({
+    mutationFn: () => api.patch(`/api/auth/passkeys/${passkey.id}`, { name }),
+    onSuccess: async () => {
+      await refresh();
+      setRenaming(false);
+    },
+  });
+  const remove = useMutation({ mutationFn: () => api.delete(`/api/auth/passkeys/${passkey.id}`), onSuccess: refresh });
+
+  if (renaming) {
+    return (
+      <li className="p-3">
+        <form
+          className="flex items-end gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            rename.mutate();
+          }}
+        >
+          <div className="flex-1">
+            <Field label="Passkey name" htmlFor={`passkey-${passkey.id}`}>
+              <input id={`passkey-${passkey.id}`} className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required autoFocus />
+            </Field>
+          </div>
+          <button className="btn-primary" disabled={rename.isPending}>
+            Save
+          </button>
+          <button type="button" className="btn-secondary" onClick={() => setRenaming(false)}>
+            Cancel
+          </button>
+        </form>
+        <ErrorNote error={rename.error} />
+      </li>
+    );
+  }
+
+  return (
+    <li className="flex items-center justify-between gap-3 p-3">
+      <span className="min-w-0">
+        <span className="block truncate font-medium">{passkey.name}</span>
+        <span className="text-xs text-muted">
+          Added {timeAgo(passkey.createdAt)}
+          {passkey.lastUsedAt ? `, last used ${timeAgo(passkey.lastUsedAt)}` : ", not used yet"}
+        </span>
+        <ErrorNote error={remove.error} />
+      </span>
+      <span className="flex shrink-0 gap-2">
+        <button className="btn-secondary px-3 py-2" onClick={() => setRenaming(true)}>
+          Rename
+        </button>
+        <button
+          className="btn-secondary px-3 py-2"
+          disabled={remove.isPending}
+          onClick={() => {
+            if (window.confirm(`Remove the passkey "${passkey.name}"? You can still sign in with your password.`)) remove.mutate();
+          }}
+        >
+          Remove
+        </button>
+      </span>
+    </li>
   );
 }

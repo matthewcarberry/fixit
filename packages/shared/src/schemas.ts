@@ -28,6 +28,10 @@ export const changePasswordSchema = z.object({
 });
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 
+export const passkeyNameSchema = z.object({
+  name: trimmed(60).min(1, "Give the passkey a name"),
+});
+
 export const preferencesSchema = z.object({
   name: trimmed(80).min(1).optional(),
   notifyPush: z.boolean().optional(),

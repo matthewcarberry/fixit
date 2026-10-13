@@ -57,7 +57,7 @@ Then open `http://<server>:8585` and create the admin account. The first person 
 
 ### HTTPS is needed for phones
 
-Browsers only allow push notifications and home-screen install on HTTPS sites. Put Fixit behind a reverse proxy with a real certificate (Nginx Proxy Manager, Caddy, Traefik, Cloudflare Tunnel) and set `FIXIT_PUBLIC_URL` to that address. On iPhone, notifications work once Fixit is added to the Home Screen (Share, then Add to Home Screen).
+Browsers only allow push notifications and home-screen install on HTTPS sites. Put Fixit behind a reverse proxy with a real certificate (Nginx Proxy Manager, Caddy, Traefik, Cloudflare Tunnel) and set `FIXIT_PUBLIC_URL` to that address. On iPhone, notifications work once Fixit is added to the Home Screen (Share, then Add to Home Screen). Passkeys (Settings, then Add a passkey) also need the https address.
 
 ## Configuration
 
@@ -65,7 +65,7 @@ All settings are environment variables. Only the data folder is required.
 
 | Variable | Default | What it does |
 | --- | --- | --- |
-| `FIXIT_PUBLIC_URL` | (empty) | The https address people use. Used in notification links. |
+| `FIXIT_PUBLIC_URL` | (empty) | The https address people use. Used in notification links, and passkeys belong to this address. |
 | `TZ` | `UTC` | Time zone for logs. |
 | `FIXIT_TICKET_PREFIX` | `HOME` | Ticket numbers look like `HOME-42`. |
 | `FIXIT_RESOLVED_AUTOCLOSE_HOURS` | `48` | Hours before a Resolved ticket closes on its own. |

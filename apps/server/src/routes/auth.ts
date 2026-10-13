@@ -36,22 +36,25 @@ export function toPublicUser(u: UserRow): PublicUser {
 // A real hash to compare against when the email doesn't exist, so timing doesn't reveal accounts.
 let dummyHash: Promise<string> | null = null;
 
+export function useSecureCookies(ctx: AppContext, req: FastifyRequest) {
+  const { secureCookies } = ctx.config;
+  return secureCookies === "true" || (secureCookies === "auto" && req.protocol === "https");
+}
+
+/** Signs `user` in on this device by setting a fresh session cookie. */
+export function startSession(ctx: AppContext, req: FastifyRequest, reply: FastifyReply, user: UserRow) {
+  const token = createSession(ctx.db, user.id, req.headers["user-agent"], ctx.config.sessionDays);
+  reply.setCookie(SESSION_COOKIE, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: useSecureCookies(ctx, req),
+    path: "/",
+    maxAge: ctx.config.sessionDays * 86_400,
+  });
+}
+
 export function authRoutes(ctx: AppContext) {
-  const { db, config } = ctx;
-
-  const secure = (req: FastifyRequest) =>
-    config.secureCookies === "true" || (config.secureCookies === "auto" && req.protocol === "https");
-
-  const startSession = (req: FastifyRequest, reply: FastifyReply, user: UserRow) => {
-    const token = createSession(db, user.id, req.headers["user-agent"], config.sessionDays);
-    reply.setCookie(SESSION_COOKIE, token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: secure(req),
-      path: "/",
-      maxAge: config.sessionDays * 86_400,
-    });
-  };
+  const { db } = ctx;
 
   return async function (app: FastifyInstance) {
     app.post(
@@ -70,7 +73,7 @@ export function authRoutes(ctx: AppContext) {
             .get();
         });
         if (!user) throw new HttpError(409, "already_setup", "Setup is already done. Sign in instead.");
-        startSession(req, reply, user);
+        startSession(ctx, req, reply, user);
         return { user: toPublicUser(user) };
       },
     );
@@ -97,7 +100,7 @@ export function authRoutes(ctx: AppContext) {
           throw new HttpError(401, "bad_credentials", "That email and password don't match");
         }
         ctx.throttle.succeed(keys);
-        startSession(req, reply, user);
+        startSession(ctx, req, reply, user);
         return { user: toPublicUser(user) };
       },
     );
@@ -131,7 +134,7 @@ export function authRoutes(ctx: AppContext) {
         .get();
       // Sign out every other device, keep this one signed in with a fresh session.
       deleteUserSessions(db, user.id);
-      startSession(req, reply, updated);
+      startSession(ctx, req, reply, updated);
       return { ok: true, user: toPublicUser(updated) };
     });
 

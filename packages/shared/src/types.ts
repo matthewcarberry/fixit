@@ -13,6 +13,14 @@ export interface PublicUser {
   createdAt: string;
 }
 
+/** A passkey someone has added to their account, as shown in Settings. */
+export interface Passkey {
+  id: number;
+  name: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+}
+
 /** What happened to the welcome email when the admin added someone. */
 export type WelcomeEmailResult = "sent" | "failed" | "not_configured";
 
