@@ -21,6 +21,8 @@ import { authRoutes } from "./routes/auth";
 import { ticketRoutes } from "./routes/tickets";
 import { adminRoutes } from "./routes/admin";
 import { notificationRoutes } from "./routes/notifications";
+import { passkeyRoutes } from "./routes/passkeys";
+import { ChallengeStore } from "./lib/passkeys";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -37,6 +39,7 @@ export interface AppContext {
   email: EmailService;
   scheduler: Scheduler;
   throttle: LoginThrottle;
+  challenges: ChallengeStore;
   requireUser(req: FastifyRequest): UserRow;
   requireAdmin(req: FastifyRequest): UserRow;
   needsSetup(): boolean;
@@ -75,6 +78,7 @@ export async function buildApp(config: Config, opts: { logger?: boolean; dbFile?
     email,
     scheduler,
     throttle: new LoginThrottle(),
+    challenges: new ChallengeStore(),
     requireUser(req) {
       if (!req.user) throw unauthorized();
       return req.user;
@@ -176,6 +180,7 @@ export async function buildApp(config: Config, opts: { logger?: boolean; dbFile?
   }));
 
   await app.register(authRoutes(ctx), { prefix: "/api" });
+  await app.register(passkeyRoutes(ctx), { prefix: "/api" });
   await app.register(ticketRoutes(ctx), { prefix: "/api" });
   await app.register(adminRoutes(ctx), { prefix: "/api" });
   await app.register(notificationRoutes(ctx), { prefix: "/api" });

@@ -24,7 +24,7 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
   if (!res.ok) {
-    if (res.status === 401 && !url.startsWith("/api/auth/login")) {
+    if (res.status === 401 && !url.startsWith("/api/auth/login") && !url.startsWith("/api/auth/passkey/")) {
       window.dispatchEvent(new Event("fixit:signed-out"));
     }
     throw new RequestError(res.status, data ?? {});

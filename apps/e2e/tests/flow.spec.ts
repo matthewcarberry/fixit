@@ -10,7 +10,7 @@ async function attemptSignIn(page: Page, who: { email: string; password: string 
   await page.goto("/");
   await page.getByLabel("Email").fill(who.email);
   await page.getByLabel("Password").fill(who.password);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
 }
 
 async function signIn(page: Page, who: { email: string; password: string }) {
@@ -156,6 +156,35 @@ test("Matt deletes a person after confirming", async ({ page }) => {
   await snap(page, "09-delete-person");
   await confirm.click();
   await expect(page.getByText("temp@example.com")).toHaveCount(0);
+});
+
+test("Sam adds a passkey and signs in with it", async ({ page }) => {
+  // Chromium's virtual authenticator stands in for Face ID or a fingerprint.
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("WebAuthn.enable");
+  await cdp.send("WebAuthn.addVirtualAuthenticator", {
+    options: {
+      protocol: "ctap2",
+      transport: "internal",
+      hasResidentKey: true,
+      hasUserVerification: true,
+      isUserVerified: true,
+      automaticPresenceSimulation: true,
+    },
+  });
+
+  await signIn(page, REQUESTER);
+  await page.goto("/settings");
+  await page.getByRole("button", { name: "Add a passkey on this device" }).click();
+  await expect(page.getByText("Passkey added.")).toBeVisible();
+  await expect(page.getByText("not used yet")).toBeVisible();
+  await snap(page, "10-passkeys");
+  await signOut(page);
+
+  await page.getByRole("button", { name: "Sign in with a passkey" }).click();
+  await expect(page.getByRole("heading", { name: "My tickets" })).toBeVisible();
+  await page.goto("/settings");
+  await expect(page.getByText("last used")).toBeVisible();
 });
 
 test("wrong passwords lock the account for a while", async ({ page }) => {

@@ -18,6 +18,7 @@ export const keys = {
   ticket: (id: number) => ["ticket", id] as const,
   notifications: ["notifications"] as const,
   users: ["users"] as const,
+  passkeys: ["passkeys"] as const,
 };
 
 export const useInfo = () => useQuery({ queryKey: keys.info, queryFn: () => api.get<AppInfo>("/api/info") });

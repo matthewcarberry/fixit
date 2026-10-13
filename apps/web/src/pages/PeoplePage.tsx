@@ -190,7 +190,7 @@ function PersonRow({ person, isMe }: { person: PublicUser; isMe: boolean }) {
           }}
         >
           <div className="min-w-48 flex-1">
-            <Field label="New password" htmlFor={`pw-${person.id}`} error={fields.password} hint="They'll choose their own when they next sign in.">
+            <Field label="New password" htmlFor={`pw-${person.id}`} error={fields.password} hint="They'll choose their own when they next sign in. Any passkeys they added are removed.">
               <input id={`pw-${person.id}`} className="input" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </Field>
           </div>
