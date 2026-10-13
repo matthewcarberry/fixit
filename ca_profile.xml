@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<CommunityApplications>
+  <Profile>Fixit is a small, self-hosted help desk for the home: family members report things that need fixing from their phone, and one person triages and tracks each ticket to done. This repository holds the app's source and its Unraid template (unraid/fixit.xml). For help or bug reports, open an issue on GitHub.</Profile>
+  <Icon>https://raw.githubusercontent.com/matthewcarberry/fixit/main/apps/web/public/icons/icon-512.png</Icon>
+  <WebPage>https://github.com/matthewcarberry/fixit</WebPage>
+</CommunityApplications>

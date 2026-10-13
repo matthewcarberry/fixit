@@ -9,6 +9,7 @@
   <Privileged>false</Privileged>
   <Support>https://github.com/matthewcarberry/fixit/issues</Support>
   <Project>https://github.com/matthewcarberry/fixit</Project>
+  <ReadMe>https://github.com/matthewcarberry/fixit/blob/main/docs/unraid.md</ReadMe>
   <Overview>Fixit is a small, self-hosted help desk for your home. Family members report things that need fixing (wifi down, a leak, a bug in the kitchen) from their phone, with photos. You triage, reply, and track each ticket to done. Includes reminders when you're waiting on someone, automatic closing of resolved tickets, phone push notifications, and an installable web app. Open the web UI after install to create the admin account.</Overview>
   <Category>Productivity: Tools:</Category>
   <WebUI>http://[IP]:[PORT:8080]/</WebUI>
@@ -20,6 +21,7 @@
   <DateInstalled/>
   <DonateText/>
   <DonateLink/>
+  <Changes>Release notes for every version: https://github.com/matthewcarberry/fixit/blob/main/CHANGELOG.md</Changes>
   <Requires>Phone push notifications and installing the app need HTTPS. Put Fixit behind a reverse proxy (such as Nginx Proxy Manager) with a domain and certificate, and set Public URL to that address.</Requires>
   <Config Name="Web UI port" Target="8080" Default="8585" Mode="tcp" Description="Port for the web app. Point your reverse proxy here." Type="Port" Display="always" Required="true" Mask="false">8585</Config>
   <Config Name="Config / data" Target="/config" Default="/mnt/user/appdata/fixit" Mode="rw" Description="Database, uploaded photos and generated keys. Back this folder up." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/fixit</Config>

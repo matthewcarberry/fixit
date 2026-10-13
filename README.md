@@ -34,7 +34,7 @@ It runs as a single Docker container, so it fits on an Unraid server, a NAS or a
 
 ### Unraid
 
-See the [Unraid guide](docs/unraid.md). In short: add the container from the template in [`unraid/fixit.xml`](unraid/fixit.xml), open the web UI, and create your admin account.
+See the [Unraid guide](docs/unraid.md). In short: add the container from the template in [`unraid/fixit.xml`](unraid/fixit.xml), open the web UI, and create your admin account. Maintainers: [publishing to Community Applications](docs/community-applications.md).
 
 ### Docker Compose
 
