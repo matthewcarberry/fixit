@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --color-brand-50: #f0fdfa;
+  --color-brand-100: #ccfbf1;
+  --color-brand-500: #14b8a6;
+  --color-brand-600: #0d9488;
+  --color-brand-700: #0f766e;
+  --color-brand-800: #115e59;
+  --color-brand-900: #134e4a;
+}
+
+:root {
+  --bg: #f7f6f3;
+  --surface: #ffffff;
+  --surface-2: #f1f0ec;
+  --border: #e4e2dc;
+  --text: #1c1b19;
+  --muted: #6b6860;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #0e1110;
+  --surface: #171b1a;
+  --surface-2: #1f2423;
+  --border: #2c3331;
+  --text: #ecebe7;
+  --muted: #9a9890;
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+@utility surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+@utility text-muted {
+  color: var(--muted);
+}
+
+@utility bg-surface-2 {
+  background: var(--surface-2);
+}
+
+@utility border-default {
+  border-color: var(--border);
+}
+
+@utility input {
+  @apply w-full rounded-xl border px-3.5 py-2.5 text-base outline-none transition;
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+  &:focus {
+    border-color: var(--color-brand-600);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-brand-600) 20%, transparent);
+  }
+}
+
+@utility label {
+  @apply mb-1.5 block text-sm font-medium;
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@utility btn-primary {
+  @apply btn bg-brand-700 text-white hover:bg-brand-800 active:bg-brand-900;
+}
+
+@utility btn-secondary {
+  @apply btn border;
+  background: var(--surface);
+  border-color: var(--border);
+  &:hover {
+    background: var(--surface-2);
+  }
+}
+
+@utility btn-danger {
+  @apply btn bg-red-600 text-white hover:bg-red-700;
+}
+
+@utility card {
+  @apply rounded-2xl border;
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
