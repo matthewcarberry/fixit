@@ -1,7 +1,18 @@
 name: Release
 
-# Push a tag like v0.2.0 to publish a new image to GitHub Container Registry.
+# Releases come from CHANGELOG.md. When a pull request renames "## Unreleased"
+# to a version like "## 0.3.0" and merges, this workflow waits for CI to pass
+# on main, tags that commit v0.3.0, publishes the image to GitHub Container
+# Registry and creates the GitHub release with that changelog section as its
+# notes. Merges that leave "## Unreleased" on top don't release anything.
+#
+# Pushing a tag like v0.3.0 by hand still works. If the tag already exists when
+# the changelog names it, nothing is tagged or built twice.
 on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
   push:
     tags: ["v*.*.*"]
 
@@ -9,11 +20,63 @@ permissions:
   contents: write
   packages: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
-  image:
+  tag:
+    # A tag pushed by hand, or a main push whose CI passed. Pull request CI runs are ignored.
+    if: >-
+      github.event_name == 'push' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.pick.outputs.tag }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - id: pick
+        env:
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = push ]; then
+            echo "tag=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          version=$(python3 scripts/changelog.py version)
+          if [ -z "$version" ]; then
+            echo "CHANGELOG.md starts with Unreleased, so there is nothing to release."
+            exit 0
+          fi
+          tag="v$version"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+            echo "$tag already exists, so there is nothing to release."
+            exit 0
+          fi
+          git tag "$tag" "$SHA"
+          if ! git push origin "refs/tags/$tag"; then
+            # Someone pushed the same tag by hand a moment ago; that push releases it.
+            if git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+              echo "$tag was just pushed by someone else, so there is nothing to release."
+              exit 0
+            fi
+            exit 1
+          fi
+          echo "Tagged $SHA as $tag."
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  image:
+    needs: tag
+    if: needs.tag.outputs.tag != ''
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ needs.tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: refs/tags/${{ needs.tag.outputs.tag }}
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -25,8 +88,8 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/fixit
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}},value=${{ needs.tag.outputs.tag }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.tag.outputs.tag }}
             type=raw,value=latest
       - uses: docker/build-push-action@v6
         with:
@@ -35,9 +98,16 @@ jobs:
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: VERSION=${{ github.ref_name }}
+          build-args: VERSION=${{ needs.tag.outputs.tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - id: notes
+        run: |
+          if python3 scripts/changelog.py notes "$TAG" > "$RUNNER_TEMP/notes.md"; then
+            echo "path=$RUNNER_TEMP/notes.md" >> "$GITHUB_OUTPUT"
+          fi
       - uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          tag_name: ${{ needs.tag.outputs.tag }}
+          body_path: ${{ steps.notes.outputs.path }}
+          generate_release_notes: ${{ steps.notes.outputs.path == '' }}
