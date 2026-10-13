@@ -19,6 +19,8 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Check Unraid template
+        run: python3 scripts/check-unraid.py
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
