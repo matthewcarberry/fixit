@@ -8,7 +8,17 @@ export interface PublicUser {
   active: boolean;
   notifyPush: boolean;
   notifyEmail: boolean;
+  /** The admin set this person's password; they must choose their own before using Fixit. */
+  mustChangePassword: boolean;
   createdAt: string;
+}
+
+/** What happened to the welcome email when the admin added someone. */
+export type WelcomeEmailResult = "sent" | "failed" | "not_configured";
+
+export interface CreatedUser {
+  user: PublicUser;
+  welcomeEmail: WelcomeEmailResult;
 }
 
 export interface Category {

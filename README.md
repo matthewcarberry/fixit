@@ -73,7 +73,7 @@ All settings are environment variables. Only the data folder is required.
 | `FIXIT_WAITING_MAX_REMINDERS` | `5` | Reminders (the status change counts as the first) before the ticket closes. |
 | `FIXIT_MAX_UPLOAD_MB` | `15` | Largest photo allowed. |
 | `FIXIT_SESSION_DAYS` | `90` | How long a device stays signed in without being used. |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | (empty) | Optional email notifications. Email turns on when `SMTP_HOST` and `SMTP_FROM` are set. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | (empty) | Optional email: ticket updates and a welcome email for new people. Email turns on when `SMTP_HOST` and `SMTP_FROM` are set. |
 | `PUID`, `PGID` | `99`, `100` | User and group the app runs as (Unraid's defaults). |
 | `PORT` | `8080` | Port inside the container. |
 

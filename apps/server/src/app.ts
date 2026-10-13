@@ -101,6 +101,15 @@ export async function buildApp(config: Config, opts: { logger?: boolean; dbFile?
     req.user = token ? userForSession(db, token, config.sessionDays) : null;
   });
 
+  // Someone signed in with a password the admin chose can only replace it (or sign out) until they do.
+  const allowedBeforePasswordChange = new Set(["/api/auth/me", "/api/auth/password", "/api/auth/logout", "/api/info"]);
+  app.addHook("onRequest", async (req) => {
+    if (!req.user?.mustChangePassword) return;
+    const path = req.url.split("?")[0]!;
+    if (!path.startsWith("/api/") || allowedBeforePasswordChange.has(path)) return;
+    throw new HttpError(403, "password_change_required", "Choose a new password to keep going");
+  });
+
   // Cross-site request protection: browsers send Origin on POST/PATCH/DELETE; it must match our host.
   app.addHook("onRequest", async (req) => {
     if (["GET", "HEAD", "OPTIONS"].includes(req.method)) return;

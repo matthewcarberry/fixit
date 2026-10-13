@@ -5,4 +5,9 @@ export const PNG_1PX = Buffer.from(
 );
 
 export const ADMIN = { name: "Matt", email: "matt@example.com", password: "correct horse battery" };
-export const REQUESTER = { name: "Sam", email: "sam@example.com", password: "kitchen sink 42" };
+export const REQUESTER = {
+  name: "Sam",
+  email: "sam@example.com",
+  startingPassword: "given by matt 1",
+  password: "kitchen sink 42",
+};

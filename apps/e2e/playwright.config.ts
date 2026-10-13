@@ -9,7 +9,8 @@ export default defineConfig({
   testDir: "tests",
   fullyParallel: false,
   workers: 1,
-  retries: process.env.CI ? 1 : 0,
+  // The tests share one server and build on each other, so a retry would start from the wrong state.
+  retries: 0,
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL: `http://localhost:${port}`,

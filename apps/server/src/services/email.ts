@@ -27,12 +27,15 @@ export class EmailService {
     return this.transport !== null;
   }
 
-  async send(to: string, subject: string, text: string): Promise<void> {
-    if (!this.transport) return;
+  /** Resolves to whether the message was handed to the mail server. Never throws. */
+  async send(to: string, subject: string, text: string): Promise<boolean> {
+    if (!this.transport) return false;
     try {
       await this.transport.sendMail({ from: this.config.smtp.from, to, subject, text });
+      return true;
     } catch (err) {
       this.log.warn({ err, to }, "email failed");
+      return false;
     }
   }
 }

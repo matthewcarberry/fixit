@@ -19,7 +19,7 @@ Open `http://<unraid-ip>:8585` and create your admin account straight away.
 
 ## 2. Add your family
 
-In Fixit, go to **Settings**, then **People**, then **Add a person**. Give each person their email and the starting password you set. They can change it under Settings.
+In Fixit, go to **Settings**, then **People**, then **Add a person**. If email is set up, Fixit emails them their sign-in details; if not, it shows you the details to pass on yourself. The first time they sign in, they choose their own password.
 
 ## 3. Reach it from anywhere with Nginx Proxy Manager
 

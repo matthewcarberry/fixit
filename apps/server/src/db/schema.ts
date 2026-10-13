@@ -15,6 +15,8 @@ export const users = sqliteTable(
     active: integer("active", { mode: "boolean" }).notNull().default(true),
     notifyPush: integer("notify_push", { mode: "boolean" }).notNull().default(true),
     notifyEmail: integer("notify_email", { mode: "boolean" }).notNull().default(true),
+    /** Set when the admin picks the password; the person must choose their own at next sign-in. */
+    mustChangePassword: integer("must_change_password", { mode: "boolean" }).notNull().default(false),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("users_email_idx").on(t.email)],
