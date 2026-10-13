@@ -1,8 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
-- Passkeys: sign in with Face ID, a fingerprint or a phone's screen lock instead of a password. Add one in Settings, then use "Sign in with a passkey". Passkeys need Fixit's https address, and they belong to that address, so changing `FIXIT_PUBLIC_URL` later means adding them again. When the admin resets someone's password, that person's passkeys are removed.
+- Passkeys: sign in with Face ID, a fingerprint or a phone's screen lock instead of a password. Add one in Settings, then use "Sign in with a passkey". Settings lists your passkeys with when each was added and last used, and you can rename or remove them. Passwords keep working.
+- Passkeys need Fixit's https address, and they belong to that address, so changing `FIXIT_PUBLIC_URL` later means adding them again.
+- When the admin resets someone's password, that person's passkeys are removed too.
+- Ready for Unraid Community Applications: the repository now has a maintainer profile (`ca_profile.xml`), the template links to its readme and this changelog, and CI checks the template still matches what the container reads.
 
 ## 0.2.0
 
