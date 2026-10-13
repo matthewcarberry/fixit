@@ -28,6 +28,7 @@ export function toPublicUser(u: UserRow): PublicUser {
     active: u.active,
     notifyPush: u.notifyPush,
     notifyEmail: u.notifyEmail,
+    mustChangePassword: u.mustChangePassword,
     createdAt: u.createdAt,
   };
 }
@@ -119,14 +120,19 @@ export function authRoutes(ctx: AppContext) {
       if (!(await verifyPassword(user.passwordHash, input.currentPassword))) {
         throw badRequest("Your current password isn't right");
       }
-      db.update(users)
-        .set({ passwordHash: await hashPassword(input.newPassword) })
+      if (user.mustChangePassword && input.newPassword === input.currentPassword) {
+        throw badRequest("Choose a new password, not the one you were given");
+      }
+      const updated = db
+        .update(users)
+        .set({ passwordHash: await hashPassword(input.newPassword), mustChangePassword: false })
         .where(eq(users.id, user.id))
-        .run();
+        .returning()
+        .get();
       // Sign out every other device, keep this one signed in with a fresh session.
       deleteUserSessions(db, user.id);
-      startSession(req, reply, user);
-      return { ok: true };
+      startSession(req, reply, updated);
+      return { ok: true, user: toPublicUser(updated) };
     });
 
     app.patch("/me", async (req) => {

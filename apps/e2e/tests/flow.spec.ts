@@ -40,10 +40,23 @@ test("first run: Matt creates the admin account and adds Sam", async ({ page }) 
   await page.getByRole("button", { name: "Add a person" }).click();
   await page.getByLabel("Name").fill(REQUESTER.name);
   await page.getByLabel("Email").fill(REQUESTER.email);
-  await page.getByLabel("Starting password").fill(REQUESTER.password);
+  await page.getByLabel("Starting password").fill(REQUESTER.startingPassword);
   await page.getByRole("button", { name: "Add", exact: true }).click();
-  await expect(page.getByText(REQUESTER.email)).toBeVisible();
+  await expect(page.getByText("no email was sent")).toBeVisible();
+  await expect(page.getByText(REQUESTER.email).first()).toBeVisible();
   await snap(page, "02-people");
+  await signOut(page);
+});
+
+test("Sam chooses their own password on first sign-in", async ({ page }) => {
+  await signIn(page, { email: REQUESTER.email, password: REQUESTER.startingPassword });
+  await expect(page.getByRole("heading", { name: "Choose your password" })).toBeVisible();
+  await page.getByLabel("Password you were given").fill(REQUESTER.startingPassword);
+  await page.getByLabel("New password").fill(REQUESTER.password);
+  await page.getByLabel("Type it again").fill(REQUESTER.password);
+  await snap(page, "02b-choose-password");
+  await page.getByRole("button", { name: "Save and continue" }).click();
+  await expect(page.getByRole("heading", { name: "My tickets" })).toBeVisible();
   await signOut(page);
 });
 

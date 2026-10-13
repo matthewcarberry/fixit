@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
-import type { CreateUserInput, PublicUser, UpdateUserInput } from "@fixit/shared";
+import type { CreatedUser, CreateUserInput, PublicUser, UpdateUserInput } from "@fixit/shared";
 import { ErrorNote, Field, PageHeader, Spinner } from "../components/ui";
 import { api, RequestError } from "../lib/api";
 import { keys, useUsers } from "../lib/queries";
@@ -36,9 +36,11 @@ function AddPerson() {
   const empty: CreateUserInput = { name: "", email: "", password: "", role: "requester" };
   const [form, setForm] = useState<CreateUserInput>(empty);
   const [open, setOpen] = useState(false);
+  const [added, setAdded] = useState<(CreatedUser & { password: string }) | null>(null);
   const add = useMutation({
-    mutationFn: () => api.post<PublicUser>("/api/users", form),
-    onSuccess: () => {
+    mutationFn: () => api.post<CreatedUser>("/api/users", form),
+    onSuccess: (result) => {
+      setAdded({ ...result, password: form.password });
       setForm(empty);
       setOpen(false);
       void queryClient.invalidateQueries({ queryKey: keys.users });
@@ -48,9 +50,18 @@ function AddPerson() {
 
   if (!open) {
     return (
-      <button className="btn-primary" onClick={() => setOpen(true)}>
-        Add a person
-      </button>
+      <div className="space-y-3">
+        {added && <AddedNotice added={added} onDismiss={() => setAdded(null)} />}
+        <button
+          className="btn-primary"
+          onClick={() => {
+            setAdded(null);
+            setOpen(true);
+          }}
+        >
+          Add a person
+        </button>
+      </div>
     );
   }
   return (
@@ -62,7 +73,7 @@ function AddPerson() {
       }}
     >
       <h2 className="font-semibold">Add a person</h2>
-      <p className="text-sm text-muted">Give them their email and this starting password. They can change it in Settings.</p>
+      <p className="text-sm text-muted">They'll be asked to choose their own password the first time they sign in.</p>
       <Field label="Name" htmlFor="new-name" error={fields.name}>
         <input id="new-name" className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
       </Field>
@@ -88,6 +99,40 @@ function AddPerson() {
         </button>
       </div>
     </form>
+  );
+}
+
+function AddedNotice({ added, onDismiss }: { added: CreatedUser & { password: string }; onDismiss: () => void }) {
+  const { user, welcomeEmail, password } = added;
+  const address = window.location.origin;
+  return (
+    <div role="status" className="card space-y-2 p-4 text-sm">
+      {welcomeEmail === "sent" ? (
+        <p>
+          <span className="font-semibold">{user.name} was added.</span> We emailed {user.email} their sign-in details.
+        </p>
+      ) : (
+        <>
+          <p>
+            <span className="font-semibold">{user.name} was added, but no email was sent</span>{" "}
+            {welcomeEmail === "failed" ? "because the mail server didn't accept it." : "because email isn't set up."}{" "}
+            Share these sign-in details with them yourself:
+          </p>
+          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-xl bg-surface-2 p-3">
+            <dt className="text-muted">Address</dt>
+            <dd className="break-all">{address}</dd>
+            <dt className="text-muted">Email</dt>
+            <dd className="break-all">{user.email}</dd>
+            <dt className="text-muted">Password</dt>
+            <dd className="break-all">{password}</dd>
+          </dl>
+        </>
+      )}
+      <p className="text-muted">They'll choose their own password the first time they sign in.</p>
+      <button className="text-sm font-medium underline" onClick={onDismiss}>
+        Dismiss
+      </button>
+    </div>
   );
 }
 
@@ -141,7 +186,7 @@ function PersonRow({ person, isMe }: { person: PublicUser; isMe: boolean }) {
           }}
         >
           <div className="min-w-48 flex-1">
-            <Field label="New password" htmlFor={`pw-${person.id}`} error={fields.password}>
+            <Field label="New password" htmlFor={`pw-${person.id}`} error={fields.password} hint="They'll choose their own when they next sign in.">
               <input id={`pw-${person.id}`} className="input" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </Field>
           </div>

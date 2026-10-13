@@ -41,8 +41,13 @@ export async function makeApp(overrides: Partial<Config> = {}) {
       cookie: adminCookie,
       body: { name, email, password: "requester password 1" },
     });
-    const r = await call("POST", "/api/auth/login", { body: { email, password: "requester password 1" } });
-    return cookieFrom(r.res);
+    const login = await call("POST", "/api/auth/login", { body: { email, password: "requester password 1" } });
+    // New people must replace the starting password; that also swaps in a fresh session.
+    const changed = await call("POST", "/api/auth/password", {
+      cookie: cookieFrom(login.res),
+      body: { currentPassword: "requester password 1", newPassword: "requester password 2" },
+    });
+    return cookieFrom(changed.res);
   };
 
   const cleanup = async () => {

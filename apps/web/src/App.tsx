@@ -13,6 +13,7 @@ import { NotificationsPage } from "./pages/NotificationsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { PeoplePage } from "./pages/PeoplePage";
 import { CategoriesPage } from "./pages/CategoriesPage";
+import { ChoosePasswordPage } from "./pages/ChoosePasswordPage";
 
 export function App() {
   const info = useInfo();
@@ -36,6 +37,7 @@ export function App() {
 
   if (info.data.needsSetup) return <SetupPage />;
   if (!me.data) return <LoginPage />;
+  if (me.data.mustChangePassword) return <ChoosePasswordPage user={me.data} />;
 
   const user = me.data;
   const admin = user.role === "admin";
