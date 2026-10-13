@@ -12,7 +12,7 @@
     "dev": "pnpm -r --parallel --filter @fixit/server --filter @fixit/web dev",
     "build": "pnpm --filter @fixit/web build && pnpm --filter @fixit/server build",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test",
+    "test": "pnpm -r --filter '!@fixit/e2e' test",
     "test:e2e": "pnpm --filter @fixit/e2e test",
     "db:generate": "pnpm --filter @fixit/server db:generate"
   }
