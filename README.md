@@ -106,9 +106,18 @@ The shared package is there so the planned iOS and Android apps (React Native) c
 
 ## Releases
 
-New work goes under `## Unreleased` in `CHANGELOG.md`. To release, rename that heading to the new version (for example `## 0.3.0`) in a pull request. Once it merges and CI passes on `main`, the Release workflow tags the commit `v0.3.0`, publishes the image to `ghcr.io/matthewcarberry/fixit` with the tags `0.3.0`, `0.3` and `latest`, and creates a GitHub release with that changelog section as its notes. Merges that leave `## Unreleased` on top don't release anything.
+Every pull request merged into `main` releases a new version once CI passes there. The Release workflow tags the merge commit, publishes the image to `ghcr.io/matthewcarberry/fixit` with the tags for that version (like `0.3.1` and `0.3`) and `latest`, and creates a GitHub release whose notes list the merged pull requests.
 
-Pushing a tag like `v0.3.0` by hand still works. If the changelog names a version that is already tagged, nothing is tagged or built twice.
+A label on the pull request picks the size of the bump, counted from the newest `v*` tag. Add it before merging; a label added afterwards does nothing.
+
+| Label | Bump | Example |
+| --- | --- | --- |
+| none | patch | 0.3.0 → 0.3.1 |
+| `release:minor` | minor | 0.3.0 → 0.4.0 |
+| `release:major` | major | 0.3.0 → 1.0.0 |
+| `release:skip` | no release | |
+
+The version only lives in the tag, so pull requests never change a version number. Pushing a tag like `v0.4.0` by hand still works when you want an exact version.
 
 ## License
 
