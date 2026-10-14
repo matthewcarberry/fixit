@@ -21,7 +21,7 @@
   <DateInstalled/>
   <DonateText/>
   <DonateLink/>
-  <Changes>Release notes for every version: https://github.com/matthewcarberry/fixit/blob/main/CHANGELOG.md</Changes>
+  <Changes>Release notes for every version: https://github.com/matthewcarberry/fixit/releases</Changes>
   <Requires>Phone push notifications and installing the app need HTTPS. Put Fixit behind a reverse proxy (such as Nginx Proxy Manager) with a domain and certificate, and set Public URL to that address.</Requires>
   <Config Name="Web UI port" Target="8080" Default="8585" Mode="tcp" Description="Port for the web app. Point your reverse proxy here." Type="Port" Display="always" Required="true" Mask="false">8585</Config>
   <Config Name="Config / data" Target="/config" Default="/mnt/user/appdata/fixit" Mode="rw" Description="Database, uploaded photos and generated keys. Back this folder up." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/fixit</Config>

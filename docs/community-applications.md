@@ -23,4 +23,4 @@ CA re-reads the template from `main`, so changes to `unraid/fixit.xml` reach use
 
 - New settings get a `<Config>` entry with a sensible default, and existing `Target` names never change, so people's saved settings keep working.
 - The `latest` tag always points at the newest release.
-- `CHANGELOG.md` says what changed; the template's `<Changes>` links to it.
+- Each GitHub release says what changed; the template's `<Changes>` links to the Releases page.

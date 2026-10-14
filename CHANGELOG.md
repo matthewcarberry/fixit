@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+Releases after 0.3.0 have their notes on the [Releases page](https://github.com/matthewcarberry/fixit/releases), written automatically from the pull requests each one includes.
 
 ## 0.3.0
 
